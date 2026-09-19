@@ -1,5 +1,4 @@
-import { formatBytes, formatDate, statusLabel } from '@/lib/format';
-import { Thumbnail } from '@/features/assets/Thumbnail';
+import { AssetCard } from '@/features/assets/AssetCard';
 import type { Asset } from '@/lib/types';
 
 interface Props {
@@ -10,10 +9,6 @@ interface Props {
   onOpen: (id: string) => void;
 }
 
-/**
- * Baseline grid. Renders every row it is given, re-renders every card on any
- * selection change, and is not reachable by keyboard.
- */
 export function AssetGrid({ assets, selectedIds, activeId, onToggleSelect, onOpen }: Props) {
   if (assets.length === 0) {
     return (
@@ -27,31 +22,14 @@ export function AssetGrid({ assets, selectedIds, activeId, onToggleSelect, onOpe
   return (
     <div className="grid">
       {assets.map((asset) => (
-        <div
+        <AssetCard
           key={asset.id}
-          className={
-            'card' +
-            (selectedIds.has(asset.id) ? ' card--selected' : '') +
-            (activeId === asset.id ? ' card--active' : '')
-          }
-          onClick={() => onOpen(asset.id)}
-        >
-          <Thumbnail asset={asset} className="card__thumb" />
-          <div className="card__body">
-            <p className="card__name">{asset.name}</p>
-            <p className="muted">
-              {asset.kind} · {formatBytes(asset.sizeBytes)} · {formatDate(asset.updatedAt)}
-            </p>
-            <span className={`pill pill--${asset.status}`}>{statusLabel(asset.status)}</span>
-          </div>
-          <input
-            type="checkbox"
-            className="card__check"
-            checked={selectedIds.has(asset.id)}
-            onClick={(e) => e.stopPropagation()}
-            onChange={() => onToggleSelect(asset.id)}
-          />
-        </div>
+          asset={asset}
+          isSelected={selectedIds.has(asset.id)}
+          isActive={activeId === asset.id}
+          onToggleSelect={onToggleSelect}
+          onOpen={onOpen}
+        />
       ))}
     </div>
   );

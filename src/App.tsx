@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { bulkSetStatus } from '@/api/client';
 import { AssetDetail } from '@/features/assets/AssetDetail';
 import { AssetGrid } from '@/features/assets/AssetGrid';
@@ -47,14 +47,14 @@ export function App() {
 
   const { items, total, loading, error, applyUpdates } = useAssets({ q, status, sort, limit: 24 });
 
-  function toggleSelect(id: string) {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  }
+  }, []);
 
   async function applyBulkStatus(next: AssetStatus) {
     const ids = [...selectedIds];
