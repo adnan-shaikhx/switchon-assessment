@@ -1,15 +1,36 @@
 import { AssetCard } from '@/features/assets/AssetCard';
+import { AssetCardSkeleton } from '@/features/assets/AssetCardSkeleton';
 import type { Asset } from '@/lib/types';
 
 interface Props {
   assets: Asset[];
   selectedIds: Set<string>;
   activeId: string | null;
+  isLoading: boolean;
+  skeletonCount: number;
   onToggleSelect: (id: string) => void;
   onOpen: (id: string) => void;
 }
 
-export function AssetGrid({ assets, selectedIds, activeId, onToggleSelect, onOpen }: Props) {
+export function AssetGrid({
+  assets,
+  selectedIds,
+  activeId,
+  isLoading,
+  skeletonCount,
+  onToggleSelect,
+  onOpen,
+}: Props) {
+  if (isLoading) {
+    return (
+      <div className="grid">
+        {Array.from({ length: skeletonCount }).map((_, i) => (
+          <AssetCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
   if (assets.length === 0) {
     return (
       <div className="empty">

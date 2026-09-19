@@ -19,6 +19,7 @@ const SORTS: Array<{ value: NonNullable<AssetQuery['sort']>; label: string }> = 
 // Trailing debounce: coalesces a burst of keystrokes into one request instead
 // of one per character, keeping typing well under the 80-req/10s rate limit.
 const SEARCH_DEBOUNCE_MS = 300;
+const PAGE_SIZE = 24;
 
 export function App() {
   const [{ q, status, sort }, setQueryState] = useQueryState();
@@ -45,7 +46,7 @@ export function App() {
     setQueryState((prev) => ({ ...prev, sort: next }));
   }
 
-  const { items, total, loading, error, applyUpdates } = useAssets({ q, status, sort, limit: 24 });
+  const { items, total, loading, error, applyUpdates } = useAssets({ q, status, sort, limit: PAGE_SIZE });
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -142,6 +143,8 @@ export function App() {
           assets={items}
           selectedIds={selectedIds}
           activeId={activeId}
+          isLoading={loading}
+          skeletonCount={PAGE_SIZE}
           onToggleSelect={toggleSelect}
           onOpen={setActiveId}
         />

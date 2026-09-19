@@ -155,6 +155,13 @@ button:disabled {
 .card--active {
   border-color: var(--ink);
 }
+.card--skeleton {
+  cursor: default;
+}
+.card__pill-skeleton {
+  display: inline-block;
+  margin-top: 6px;
+}
 .card__thumb {
   display: block;
   width: 100%;
