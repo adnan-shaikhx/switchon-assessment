@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type KeyboardEvent } from 'react';
 import { Thumbnail } from '@/features/assets/Thumbnail';
 import { formatBytes, formatDate, statusLabel } from '@/lib/format';
 import type { Asset } from '@/lib/types';
@@ -12,10 +12,21 @@ interface Props {
 }
 
 function AssetCardImpl({ asset, isSelected, isActive, onToggleSelect, onOpen }: Props) {
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    
+    event.preventDefault();
+    onOpen(asset.id);
+  }
+
   return (
     <div
       className={'card' + (isSelected ? ' card--selected' : '') + (isActive ? ' card--active' : '')}
+      role="button"
+      tabIndex={0}
+      aria-label={asset.name}
       onClick={() => onOpen(asset.id)}
+      onKeyDown={handleKeyDown}
     >
       <Thumbnail asset={asset} className="card__thumb" />
       <div className="card__body">
@@ -29,6 +40,7 @@ function AssetCardImpl({ asset, isSelected, isActive, onToggleSelect, onOpen }: 
         type="checkbox"
         className="card__check"
         checked={isSelected}
+        aria-label={`Select ${asset.name}`}
         onClick={(e) => e.stopPropagation()}
         onChange={() => onToggleSelect(asset.id)}
       />
