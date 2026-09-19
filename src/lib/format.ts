@@ -1,4 +1,4 @@
-import type { AssetStatus } from './types';
+import type { AssetStatus, BulkResult } from './types';
 
 const UNITS = ['B', 'KB', 'MB', 'GB'];
 
@@ -37,4 +37,28 @@ const STATUS_LABELS: Record<AssetStatus, string> = {
 
 export function statusLabel(status: AssetStatus): string {
   return STATUS_LABELS[status];
+}
+
+const FAILURE_REASON_LABELS: Record<string, string> = {
+  legal_hold: 'on legal hold',
+  conflict: 'changed by someone else',
+  not_found: 'no longer exists',
+};
+
+export function summarizeBulkResult(result: BulkResult): string {
+  if (result.failed === 0) {
+    return `${result.applied} asset${result.applied === 1 ? '' : 's'} updated.`;
+  }
+
+  const reasonCounts = new Map<string, number>();
+  for (const item of result.results) {
+    if (item.ok) continue;
+    reasonCounts.set(item.code, (reasonCounts.get(item.code) ?? 0) + 1);
+  }
+
+  const reasons = [...reasonCounts.entries()]
+    .map(([code, count]) => `${count} ${FAILURE_REASON_LABELS[code] ?? code}`)
+    .join(', ');
+
+  return `${result.applied} updated, ${result.failed} failed (${reasons}).`;
 }

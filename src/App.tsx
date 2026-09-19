@@ -4,7 +4,7 @@ import { AssetDetail } from '@/features/assets/AssetDetail';
 import { AssetGrid } from '@/features/assets/AssetGrid';
 import { useAssets } from '@/features/assets/useAssets';
 import { useQueryState } from '@/features/assets/useQueryState';
-import { statusLabel } from '@/lib/format';
+import { statusLabel, summarizeBulkResult } from '@/lib/format';
 import type { Asset, AssetStatus, AssetQuery } from '@/lib/types';
 import { debounce } from '@/utils';
 
@@ -45,7 +45,7 @@ export function App() {
     setQueryState((prev) => ({ ...prev, sort: next }));
   }
 
-  const { items, total, loading, error } = useAssets({ q, status, sort, limit: 24 });
+  const { items, total, loading, error, applyUpdates } = useAssets({ q, status, sort, limit: 24 });
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -63,15 +63,23 @@ export function App() {
     try {
       // Sends every selected id in one call, which the API refuses above 50.
       const result = await bulkSetStatus(ids, next);
-      setNotice(`${result.applied} updated, ${result.failed} failed.`);
+      const updated: Asset[] = [];
+
+      for (const item of result.results) {
+        if (item.ok) updated.push(item.asset);
+      }
+
+      applyUpdates(updated);
+      
+      setNotice(summarizeBulkResult(result));
       setSelectedIds(new Set());
     } catch (err) {
       setNotice(err instanceof Error ? err.message : 'Bulk update failed');
     }
   }
 
-  function handleSaved(_asset: Asset) {
-    // The list is not told that anything changed, so it shows stale rows.
+  function handleSaved(asset: Asset) {
+    applyUpdates([asset]);
   }
 
   useEffect(() => debouncedSetQ.cancel, [debouncedSetQ]);
