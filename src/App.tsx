@@ -3,6 +3,7 @@ import { bulkSetStatus } from '@/api/client';
 import { AssetDetail } from '@/features/assets/AssetDetail';
 import { AssetGrid } from '@/features/assets/AssetGrid';
 import { useAssets } from '@/features/assets/useAssets';
+import { useQueryState } from '@/features/assets/useQueryState';
 import { statusLabel } from '@/lib/format';
 import type { Asset, AssetStatus, AssetQuery } from '@/lib/types';
 import { debounce } from '@/utils';
@@ -20,19 +21,28 @@ const SORTS: Array<{ value: NonNullable<AssetQuery['sort']>; label: string }> = 
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function App() {
-  const [qInput, setQInput] = useState('');
-  const [q, setQ] = useState('');
-  const [status, setStatus] = useState<AssetStatus[]>([]);
-  const [sort, setSort] = useState<NonNullable<AssetQuery['sort']>>('updatedAt:desc');
+  const [{ q, status, sort }, setQueryState] = useQueryState();
+  const [qInput, setQInput] = useState(q);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const debouncedSetQ = useMemo(() => debounce(setQ, SEARCH_DEBOUNCE_MS), []);
+  const debouncedSetQ = useMemo(
+    () => debounce((value: string) => setQueryState((prev) => ({ ...prev, q: value })), SEARCH_DEBOUNCE_MS),
+    [setQueryState],
+  );
 
   function handleSearchChange(value: string) {
     setQInput(value);
     debouncedSetQ(value);
+  }
+
+  function setStatusFilter(next: AssetStatus[]) {
+    setQueryState((prev) => ({ ...prev, status: next }));
+  }
+
+  function setSort(next: NonNullable<AssetQuery['sort']>) {
+    setQueryState((prev) => ({ ...prev, sort: next }));
   }
 
   const { items, total, loading, error } = useAssets({ q, status, sort, limit: 24 });
@@ -93,9 +103,7 @@ export function App() {
               type="checkbox"
               checked={status.includes(s)}
               onChange={(e) =>
-                setStatus((prev) =>
-                  e.target.checked ? [...prev, s] : prev.filter((x) => x !== s),
-                )
+                setStatusFilter(e.target.checked ? [...status, s] : status.filter((x) => x !== s))
               }
             />
             {statusLabel(s)}
