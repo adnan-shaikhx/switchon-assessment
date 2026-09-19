@@ -218,6 +218,17 @@ button:disabled {
   background: var(--bg-soft);
 }
 
+.thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+}
+.thumb-placeholder svg {
+  width: 32%;
+  height: 32%;
+}
+
 .facts {
   display: grid;
   grid-template-columns: 90px 1fr;

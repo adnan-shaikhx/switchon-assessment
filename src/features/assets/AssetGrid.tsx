@@ -1,5 +1,5 @@
-import { thumbnailUrl } from '@/api/client';
 import { formatBytes, formatDate, statusLabel } from '@/lib/format';
+import { Thumbnail } from '@/features/assets/Thumbnail';
 import type { Asset } from '@/lib/types';
 
 interface Props {
@@ -36,7 +36,7 @@ export function AssetGrid({ assets, selectedIds, activeId, onToggleSelect, onOpe
           }
           onClick={() => onOpen(asset.id)}
         >
-          <img className="card__thumb" src={thumbnailUrl(asset.id)} alt="" />
+          <Thumbnail asset={asset} className="card__thumb" />
           <div className="card__body">
             <p className="card__name">{asset.name}</p>
             <p className="muted">

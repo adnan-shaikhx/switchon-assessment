@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { bulkSetStatus } from '@/api/client';
 import { AssetDetail } from '@/features/assets/AssetDetail';
 import { AssetGrid } from '@/features/assets/AssetGrid';
 import { useAssets } from '@/features/assets/useAssets';
 import { statusLabel } from '@/lib/format';
 import type { Asset, AssetStatus, AssetQuery } from '@/lib/types';
+import { debounce } from '@/utils';
 
 const STATUSES: AssetStatus[] = ['draft', 'in_review', 'approved', 'archived'];
 const SORTS: Array<{ value: NonNullable<AssetQuery['sort']>; label: string }> = [
@@ -14,7 +15,12 @@ const SORTS: Array<{ value: NonNullable<AssetQuery['sort']>; label: string }> = 
   { value: 'createdAt:desc', label: 'Newest' },
 ];
 
+// Trailing debounce: coalesces a burst of keystrokes into one request instead
+// of one per character, keeping typing well under the 80-req/10s rate limit.
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function App() {
+  const [qInput, setQInput] = useState('');
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<AssetStatus[]>([]);
   const [sort, setSort] = useState<NonNullable<AssetQuery['sort']>>('updatedAt:desc');
@@ -22,7 +28,13 @@ export function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Every keystroke sends a request. Nothing is debounced or cancelled.
+  const debouncedSetQ = useMemo(() => debounce(setQ, SEARCH_DEBOUNCE_MS), []);
+
+  function handleSearchChange(value: string) {
+    setQInput(value);
+    debouncedSetQ(value);
+  }
+
   const { items, total, loading, error } = useAssets({ q, status, sort, limit: 24 });
 
   function toggleSelect(id: string) {
@@ -52,6 +64,8 @@ export function App() {
     // The list is not told that anything changed, so it shows stale rows.
   }
 
+  useEffect(() => debouncedSetQ.cancel, [debouncedSetQ]);
+
   return (
     <div className="app">
       <header className="topbar">
@@ -60,8 +74,8 @@ export function App() {
           className="search"
           type="search"
           placeholder="Search assets"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+          value={qInput}
+          onChange={(e) => handleSearchChange(e.target.value)}
         />
         <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
           {SORTS.map((option) => (
